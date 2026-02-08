@@ -1,76 +1,40 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
+const http = require('http');
+
+// 1. Servidor web básico para que la nube no lo apague
+http.createServer((req, res) => {
+    res.write('Bot Vivo 24/7');
+    res.end();
+}).listen(process.env.PORT || 3000);
 
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     }
 });
 
 client.on('qr', (qr) => {
     qrcode.generate(qr, {small: true});
-    console.log('Escanea el QR para iniciar sesión');
+    console.log('--- ESCANEA EL QR ABAJO ---');
 });
 
 client.on('ready', () => {
-    console.log('¡Bot Multimedia Listo!');
+    console.log('¡Bot funcionando en la nube!');
 });
 
 client.on('message', async (message) => {
     const msgLower = message.body.toLowerCase();
-
-    // COMANDO: /lista
     if (msgLower === '/lista') {
-        try {
-            const data = JSON.parse(fs.readFileSync('./links.json', 'utf8'));
-            
-            let respuesta = '📂 *CONTENIDO DISPONIBLE* 📂\n\n';
-
-            // Sección de APKs
-            respuesta += '📦 *APKs Disponibles:*\n';
-            Object.keys(data.apks).forEach(app => {
-                respuesta += `- ${app}\n`;
-            });
-
-            // Sección de Fondos
-            respuesta += '\n🖼️ *Fondos de Pantalla:*\n';
-            Object.keys(data.fondos).forEach(fondo => {
-                respuesta += `- ${fondo}\n`;
-            });
-
-            respuesta += '\nUsa: */descargar [nombre]*';
-            message.reply(respuesta);
-        } catch (err) {
-            message.reply('❌ Error al generar la lista.');
-        }
+        const data = JSON.parse(fs.readFileSync('./links.json', 'utf8'));
+        let res = '📂 *DISPONIBLE:*\n';
+        Object.keys(data.apks).forEach(a => res += `- ${a}\n`);
+        message.reply(res);
     }
-
-    // COMANDO: /descargar [nombre]
-    if (msgLower.startsWith('/descargar ')) {
-        const nombrePedido = msgLower.split('/descargar ')[1].trim();
-        
-        try {
-            const data = JSON.parse(fs.readFileSync('./links.json', 'utf8'));
-
-            // Buscamos en ambas categorías (apks y fondos)
-            const todasLasKeys = { ...data.apks, ...data.fondos };
-            
-            // Buscamos la coincidencia sin importar mayúsculas
-            const llaveReal = Object.keys(todasLasKeys).find(k => k.toLowerCase() === nombrePedido);
-
-            if (llaveReal) {
-                const link = todasLasKeys[llaveReal];
-                await message.reply(`✅ *${llaveReal.toUpperCase()}* localizado.\n\n🚀 *Link de descarga:* \n${link}`);
-            } else {
-                message.reply(`❌ No encontré nada llamado *${nombrePedido}*.\nEscribe */lista* para ver lo disponible.`);
-            }
-        } catch (err) {
-            message.reply('❌ Error al procesar la descarga.');
-        }
-    }
+    // ... tu lógica de /descargar aquí
 });
 
-client.initialize();
+client.initialize();client.initialize();
