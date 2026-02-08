@@ -1,0 +1,16 @@
+{
+  "$schema": "https://railway.app/setup-schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "nixpacksPlan": {
+      "phases": {
+        "setup": {
+          "nixPkgs": ["nodejs", "google-chrome"]
+        }
+      }
+    }
+  },
+  "deploy": {
+    "startCommand": "node index.js"
+  }
+}
